@@ -1,0 +1,84 @@
+@page "/management/media/movies"
+@using System.Collections.Generic;
+@using HomeApp.Data.Radarr;
+@using HomeApp.Models.Domain.Movies;
+@using System.Dynamic;
+@inject RadarrMovieLibraryService Radarr;
+
+<PageTitle>Movies</PageTitle>
+
+@* <MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <MudItem xs="12" sm="12" md="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Library</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTable Items="movies" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading"
+                        LoadingProgressColor="Color.Info">
+                        <HeaderContent>
+                            <MudTh>Poster</MudTh>
+                            <MudTh>Title</MudTh>
+                            <MudTh>Year</MudTh>
+                            <MudTh>Genres</MudTh>
+                            <MudTh>Quality</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Poster"><img src="@context.PosterUrl" style="width:100px; height: auto;" /></MudTd>
+                            <MudTd DataLabel="Title">
+                                <div><b>@context.Title</b></div>
+                                <div>@LimitOverview(context.Overview)</div>
+                            </MudTd>
+                            <MudTd DataLabel="Year">@context.Year</MudTd>
+                            <MudTd DataLabel="Genres">@string.Join(", ", context.Genres)</MudTd>
+                            <MudTd DataLabel="Quality">@context.MovieFile?.Quality.Quality?.Name</MudTd>
+                            <MudTd DataLabel="Status">@context.DisplayStatus</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OnGetLibraryClicked">Read More
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer> *@
+
+@code {
+    List<Movie> movies = new List<Movie>();
+    private bool _loading;
+    private void OnGetLibraryClicked(object sender)
+    {
+
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        _loading = true;
+        return Radarr.GetLibrary().ContinueWith(response => {
+            movies = response.Result;
+            _loading = false;
+        });
+    }
+
+    private string LimitOverview(string overview) {
+        if(string.IsNullOrWhiteSpace(overview)) 
+            return "";
+
+        if(overview.Length > 200){
+            return overview.Substring(0, 200) + "...";
+        }
+        else return overview;
+    }
+}
