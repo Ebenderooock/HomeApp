@@ -1,0 +1,150 @@
+﻿@page "/Management/Home/Content/Inventory/Item/{ItemId}"
+@using HomeApp.Models.Domain.Management.Home.Content
+@using HomeApp.Enums.Management.Home.Content
+@using MudBlazor
+@using Microsoft.EntityFrameworkCore
+@using HomeApp.Data.Home;
+@inject HomeContentDbContext homeContentDb
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Inventory</MudText>
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudCard>
+            <MudForm Model="@model" @ref="@form">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudTextField @bind-Value="model.Description"
+                                          For="@(() => model.Description)"
+                                          Immediate="true"
+                                          Label="Description"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudSelect @bind-Value="model.Category" T="Category" Label="Category" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                @foreach (Category category in categories.OrderBy(t => t.Description))
+                                {
+                                    <MudSelectItem T="Category" Value="category">@category.Description</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+
+                            <MudSelect @bind-Value="model.AcquisitionType" T="AcquisitionType" Label="Acquired by" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Gift" title="Gift" />
+                                <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Purchased" title="Purchased" />
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudNumericField @bind-Value="model.Value" Label="Value" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentText="R" HideSpinButtons="true" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudForm>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="Submit">Add</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>    
+</MudGrid>
+
+
+
+@code {
+    [Parameter]
+    public int ItemId { get;  set; }
+
+    MudForm form;
+
+    private InventoryItem model = new();
+    private List<Category> categories;
+    private bool _editMode = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        GetData();
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 10;
+    }
+
+    private void ToggleEditMode()
+    {
+        _editMode = !_editMode;
+    }
+    private void GetData()
+    {
+        categories = homeContentDb.Categories.Where(i => !i.IsDeleted).ToList();
+        homeContentDb.InventoryItems.FirstOrDefaultAsync(i => i.Id == ItemId).ContinueWith(i =>
+        {
+            model = i.Result;
+        });
+    }
+
+    private Task Save (InventoryItem inventoryItem)
+    { 
+        return homeContentDb.SaveChangesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                Snackbar.Add($"Inventory item updated!", Severity.Success);                
+                model = new();
+            }
+            else
+            {
+                Snackbar.Add($"Inventory item could not be updated!", Severity.Error);
+            }
+
+
+        });
+    }
+
+    private void Cancel (InventoryItem inventoryItem)
+    {
+        homeContentDb.Entry(inventoryItem).Reload();
+    }
+
+    private Task Delete(InventoryItem inventoryItem)
+    {
+        homeContentDb.InventoryItems.Remove(inventoryItem);
+        return homeContentDb.SaveChangesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                Snackbar.Add($"Inventory item deleted!", Severity.Success);
+                GetData();
+                model = new();
+            }
+            else
+            {
+                Snackbar.Add($"Inventory item could not be deleted!", Severity.Error);
+            }
+
+        });
+    }
+
+    private Task Submit()
+    {
+        return homeContentDb.InventoryItems.AddAsync(model).AsTask().ContinueWith(task =>
+        {
+            return homeContentDb.SaveChangesAsync().ContinueWith(saveTask =>
+            {
+                if (saveTask.IsCompletedSuccessfully)
+                {
+                    Snackbar.Add($"Inventory item added!", Severity.Success);
+                    GetData();
+                    model = new();
+                }
+                else
+                {
+                    Snackbar.Add($"Inventory item could not be added!", Severity.Error);
+                };
+
+                return saveTask.Result;
+            }).Result;
+
+            // reload data
+        });
+    }
+}

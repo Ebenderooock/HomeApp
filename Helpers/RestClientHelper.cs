@@ -1,5 +1,6 @@
 using RestSharp;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace HomeApp.Helpers {
 
@@ -9,16 +10,18 @@ namespace HomeApp.Helpers {
             return new RestClient(baseUrl);
         }
 
-        private static IRestRequest CreateRequest(string resource, string apiKey = "") {
-            return new RestRequest($"{resource}{ (string.IsNullOrEmpty(apiKey) ? "" : "?apiKey=" + apiKey) }");
+        private static IRestRequest CreateRequest(string resource) {
+            return new RestRequest($"{resource}");
         }
 
-        public static Task<T> Get<T>(string baseUrl, string resource, string apiKey = "") {
-            return GetClient(baseUrl).GetAsync<T>(CreateRequest(resource, apiKey));
+        public static Task<TResponse> Get<TResponse>(string baseUrl, string resource) {
+            return GetClient(baseUrl).GetAsync<TResponse>(CreateRequest(resource));
         }
-
         
-
+        public static Task<TResponse> Post<TResponse> (string baseUrl, string resource, object payload)
+        {
+            return GetClient(baseUrl).PostAsync<TResponse>(CreateRequest(resource).AddJsonBody(payload));
+        }
     }
 
 }

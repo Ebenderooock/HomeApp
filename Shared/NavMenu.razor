@@ -1,114 +1,31 @@
-﻿@if (ShowSpinner)
-{
-    <div class="sb-content-overlay">
-        <div class="sb-loading">
-            <svg class="circular" height="40" width="40">
-                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="6" stroke-miterlimit="10" />
-            </svg>
-        </div>
-    </div>
-}
+﻿<PersonCard Style="background-color: var(--mud-palette-drawer-background);color: var(--mud-palette-drawer-text);"/>
+<MudDivider Class="mb-4" />
+<MudNavMenu>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Personal</MudText>
+    <MudNavLink Href="/personal/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Dashboard">Dashboard</MudNavLink>
+    <MudNavLink Href="/personal/account" Icon="@Icons.Material.Outlined.Person">Account</MudNavLink>
 
-<nav class="navbar navbar-default" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <span id="menu-toggle" href="#" class="navbar-toggle e-icon" @onclick="OpenSidebar"></span>
-            <div class="navbar-brand samplenameheader"></div>
-        </div>
-    </div>
-</nav>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">App Examples</MudText>
+    <MudNavLink Href="application/email" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Email">Email</MudNavLink>
+    <MudNavLink Href="application/chat" Icon="@Icons.Material.Outlined.Forum">Chat</MudNavLink>
+    <MudNavLink Href="application/todo" Icon="@Icons.Custom.Uncategorized.AlertSuccess" Disabled="true">Todo</MudNavLink>
+    <MudNavLink Href="application/users" Icon="@Icons.Material.Outlined.PeopleAlt" Disabled="true">Users</MudNavLink>
 
-<div id="navigation-sidebar">
-    <SfSidebar @ref="Sidebar" Width="200px" MediaQuery="(min-width: 769px)" Created="@(() => OnSidebarCreate?.Invoke())">
-        <ChildContent>
-            <div id="sidebar-wrapper">
-                <div class='samplename-header'>
-                    <div class='samplename'><h1>EXPENSE TRACKER</h1></div>
-                </div>
-                <div class="info align-center">
-                    <div class="image"></div>
-                    <div class="content nameContent">
-                        <p class='name' id='user-name'>Nicholas Delacruz</p>
-                        <div class='wallet-container'>
-                            <span style='height: 27px;' class='balance-align'>
-                                <img alt="Cash wallet" src="./styles/images/cash-wallet.svg" />
-                            </span>
-                            <span id="current-balance" class='balance-align'>@ExpenseDataService.CurrentBalance</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="page-list align-center nav-list">
-                    <div class='nav-item'>
-                        <NavLink class="overview" href="" @onmousedown="@(() => StartSpinner("dashboard"))" @ontouchstart="@(() => StartSpinner("dashboard"))" Match="NavLinkMatch.All" @onclick="TogglePage">
-                            <span aria-hidden="true" title="Dashboard">Dashboard</span>
-                        </NavLink>
-                    </div>
-                    <div class='nav-item'>
-                        <NavLink class="expense" href="expense" @onmousedown="@(() => StartSpinner("expense"))" @ontouchstart="@(() => StartSpinner("expense"))" @onclick="TogglePage">
-                            <span aria-hidden="true" title="Transactions">Transactions</span>
-                        </NavLink>
-                    </div>
-                    <div class='nav-item'>
-                        <NavLink class="about" href="about" @onmousedown="@(() => StartSpinner("about"))" @ontouchstart="@(() => StartSpinner("about"))" @onclick="TogglePage">
-                            <span aria-hidden="true" title="About">About</span>
-                        </NavLink>
-                    </div>
-                </div>
-                <div class="github-logo">
-                    <a href="https://github.com/syncfusion/blazor-showcase-expense-tracker" target="_blank">
-                        <img src="mark.svg" alt="GitHub source code" /><span>Source Code</span>
-                    </a>
-                </div>
-            </div>
-        </ChildContent>
-    </SfSidebar>
-</div>
-
-<div id="overlay" class="@OverlayClass" @onclick="CloseSidebar"></div>
+    <MudText Typo="Typo.subtitle2" Color="Color.Inherit" Class="ml-4 my-3">Pages</MudText>
+    <MudNavGroup Title="Authentication" Icon="@Icons.Material.Outlined.AssignmentInd" HideExpandIcon="true">
+        <MudNavLink Href="pages/authentication/login" Icon="@Icons.Material.Outlined.InsertDriveFile">Login</MudNavLink>
+        <MudNavLink Href="pages/authentication/register" Icon="@Icons.Material.Outlined.InsertDriveFile">Register</MudNavLink>
+        <MudNavLink Href="pages/authentication/forgot-password" Icon="@Icons.Material.Outlined.InsertDriveFile">Forgot Password</MudNavLink>
+        <MudNavLink Href="pages/authentication/reset-password" Icon="@Icons.Material.Outlined.InsertDriveFile">Reset Password</MudNavLink>
+    </MudNavGroup>
+    <MudNavGroup Title="Error" Icon="@AlertAssignmentIcon" HideExpandIcon="true">
+        <MudNavLink Href="pages/error/404" Icon="@Icons.Material.Outlined.InsertDriveFile">404</MudNavLink>
+    </MudNavGroup>
+    <MudNavGroup Title="Utility" Icon="@Icons.Material.Outlined.Assignment" HideExpandIcon="true">
+        <MudNavLink Href="pages/utility/faq" Icon="@Icons.Material.Outlined.InsertDriveFile">Faq</MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>
 
 @code {
-    [Parameter]
-    public System.Action OnSidebarCreate { get; set; }
-    private SfSidebar Sidebar;
-    public string OverlayClass = "";
-    private bool ShowSpinner = false;
-    private string Page;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        Page = "";
-       // ExpenseDataService.OnChange += StateHasChanged;
-    }
-
-    private async Task OpenSidebar()
-    {
-        if (!Sidebar.IsOpen)
-        {
-            await this.Sidebar.Show();
-            this.OverlayClass = "overlay";
-        }
-    }
-
-    private async Task CloseSidebar()
-    {
-        if (Sidebar.IsOpen)
-        {
-            await this.Sidebar.Hide();
-            this.OverlayClass = "";
-        }
-    }
-
-    private async Task TogglePage()
-    {
-        await CloseSidebar();
-        ShowSpinner = false;
-    }
-
-    private void StartSpinner(string page)
-    {
-        if (!ShowSpinner && page != Page)
-            ShowSpinner = true;
-        Page = page;
-    }
-}
+    string AlertAssignmentIcon { get; set; } = "<path d=\"M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H9.18C9.6,1.84 10.7,1 12,1C13.3,1 14.4,1.84 14.82,3H19M12,3A1,1 0 0,0 11,4A1,1 0 0,0 12,5A1,1 0 0,0 13,4A1,1 0 0,0 12,3M7,7V5H5V19H19V5H17V7H7M11,9H13V13.5H11V9M11,15H13V17H11V15Z\" />";
+} 

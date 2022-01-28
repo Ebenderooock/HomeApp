@@ -1,0 +1,250 @@
+﻿@page "/Management/Home/Content/Inventory"
+@using HomeApp.Models.Domain.Management.Home.Content
+@using HomeApp.Enums.Management.Home.Content
+@using MudBlazor
+@using Microsoft.EntityFrameworkCore
+@using HomeApp.Data.Home;
+@inject HomeContentDbContext homeContentDb
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Inventory</MudText>
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudCard>
+            <MudForm Model="@model" @ref="@form">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudTextField @bind-Value="model.Description"
+                                          For="@(() => model.Description)"
+                                          Immediate="true"
+                                          Label="Description"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudSelect @bind-Value="model.Category" T="Category" Label="Category" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                @foreach (Category category in categories.OrderBy(t => t.Description))
+                                {
+                                    <MudSelectItem T="Category" Value="category">@category.Description</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+
+                            <MudSelect @bind-Value="model.AcquisitionType" T="AcquisitionType" Label="Acquired by" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Gift" title="Gift" />
+                                <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Purchased" title="Purchased" />
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="6">
+                            <MudNumericField @bind-Value="model.Value" Label="Value" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentText="R" HideSpinButtons="true" />
+                        </MudItem>
+                    </MudGrid>
+
+
+                </MudCardContent>
+            </MudForm>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="Submit">Add</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudCard Style="height:100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Inventory Items</MudText>
+                    <MudButton OnClick="ToggleEditMode" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small">Edit</MudButton>
+                                        
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="px-0">
+                <MudSimpleTable Elevation="0" Hover="true">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Acquired By</th>
+                            <th>Value</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (InventoryItem inventoryItem in inventoryItems.OrderBy(i => i.Category.Description).ThenBy(i=> i.Description))
+                        {
+                            <tr>
+                                <td>
+                                    <MudText Typo="Typo.body1">@inventoryItem.Id</MudText>
+                                </td>
+                                <td>
+                                    @if (!_editMode)
+                                    {
+                                        <MudText Typo="Typo.body1">@inventoryItem.Description</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudTextField @bind-Value="inventoryItem.Description"
+                                              For="@(() => model.Description)"
+                                              Immediate="true"
+                                              Label="Description"
+                                              Variant="Variant.Outlined" />
+                                    }
+
+                                </td>
+                                <td>
+                                    @if (!_editMode)
+                                    {
+                                        <MudText Typo="Typo.body1">@inventoryItem.Category?.Description</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudSelect @bind-Value="inventoryItem.Category" T="Category" Label="Category" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                            @foreach (Category category in categories.OrderBy(t => t.Description))
+                                            {
+                                                <MudSelectItem T="Category" Value="category">@category.Description</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!_editMode)
+                                    {
+                                        <MudText Typo="Typo.body1">@inventoryItem.AcquisitionType</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudSelect @bind-Value="inventoryItem.AcquisitionType" T="AcquisitionType" Label="Acquired by" Strict="true" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                            <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Gift" title="Gift" />
+                                            <MudSelectItem T="AcquisitionType" Value="AcquisitionType.Purchased" title="Purchased" />
+                                        </MudSelect>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!_editMode)
+                                    {
+                                        <MudText Typo="Typo.body1">@inventoryItem.Value</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudNumericField @bind-Value="inventoryItem.Value" Label="Value" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentText="R" HideSpinButtons="true" />
+                                    }
+
+                                </td>
+                                <td>
+                                     @if (!_editMode)
+                                    {
+                                        <MudButton OnClick="() => Delete(inventoryItem)" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small">Delete</MudButton>
+                                    }
+                                    else
+                                    {
+                                        <MudButton OnClick="() => Save(inventoryItem)" Variant="Variant.Filled" Color="Color.Success" Size="Size.Small">Save</MudButton>
+                                        <MudButton OnClick="() => Cancel(inventoryItem)" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small">Cancel</MudButton>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    MudForm form;
+
+    private InventoryItem model = new();
+    private List<InventoryItem> inventoryItems = new();
+    private List<Category> categories;
+    private bool _editMode = false;
+    private decimal estimatedValue => homeContentDb.InventoryItems.Where(i => !i.IsDeleted).Sum(i => i.Value);
+    private int totalItems => homeContentDb.InventoryItems.Where(i => !i.IsDeleted).Count();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        GetData();
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 10;
+    }
+
+    private void ToggleEditMode()
+    {
+        _editMode = !_editMode;
+    }
+    private void GetData()
+    {
+        inventoryItems = homeContentDb.InventoryItems.Where(i => !i.IsDeleted).ToList();
+        categories = homeContentDb.Categories.Where(i => !i.IsDeleted).ToList();
+    }
+
+    private Task Save (InventoryItem inventoryItem)
+    { 
+        return homeContentDb.SaveChangesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                Snackbar.Add($"Inventory item updated!", Severity.Success);                
+                model = new();
+            }
+            else
+            {
+                Snackbar.Add($"Inventory item could not be updated!", Severity.Error);
+            }
+
+
+        });
+    }
+
+    private void Cancel (InventoryItem inventoryItem)
+    {
+        homeContentDb.Entry(inventoryItem).Reload();
+    }
+
+    private Task Delete(InventoryItem inventoryItem)
+    {
+        homeContentDb.InventoryItems.Remove(inventoryItem);
+        return homeContentDb.SaveChangesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                Snackbar.Add($"Inventory item deleted!", Severity.Success);
+                GetData();
+                model = new();
+            }
+            else
+            {
+                Snackbar.Add($"Inventory item could not be deleted!", Severity.Error);
+            }
+
+
+        });
+    }
+
+    private Task Submit()
+    {
+        return homeContentDb.InventoryItems.AddAsync(model).AsTask().ContinueWith(task =>
+        {
+            return homeContentDb.SaveChangesAsync().ContinueWith(saveTask =>
+            {
+                if (saveTask.IsCompletedSuccessfully)
+                {
+                    Snackbar.Add($"Inventory item added!", Severity.Success);
+                    GetData();
+                    model = new();
+                }
+                else
+                {
+                    Snackbar.Add($"Inventory item could not be added!", Severity.Error);
+                };
+
+                return saveTask.Result;
+            }).Result;
+
+            // reload data
+        });
+    }
+}

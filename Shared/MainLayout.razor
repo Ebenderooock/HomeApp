@@ -1,39 +1,91 @@
-﻿@inherits LayoutComponentBase
+﻿@using HomeApp.Helpers
+@using HomeApp.Enums.Application
+@inherits LayoutComponentBase
 
-@if (ShowSpinner)
-{
-    <div class="sb-content-overlay">
-        <div class="sb-loading">
-            <svg class="circular" height="40" width="40">
-                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="6" stroke-miterlimit="10" />
-            </svg>
-        </div>
-    </div>
-    <style>
-        #main-page {
-            visibility: hidden;
-            opacity: 0;
-        }
-    </style>
-}
 
-<div id="main-page">
-    <div class="sidebar">
-        <NavMenu OnSidebarCreate="@(() => { ShowSpinner = false; StateHasChanged(); })" />
-    </div>
-    <div id="addexpenseDialog" class="expense-dialog"></div>
+<MudThemeProvider Theme="ThemeHelper.GetTheme(_theme)" />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <div id="sidebarRightpane" class="sidebar-Rightpane">
-        <div class="content container-fluid rightpane">
-            <div class="content-wrapper">
-                <div id="content">
-                    @Body
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<MudLayout>
+    <MudAppBar Elevation="25">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" />
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <MudText Typo="Typo.h6" Class="ml-4">HomeApp</MudText>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
+            <MudText Typo="Typo.subtitle2">HomeApp</MudText>
+        </MudHidden>
+        <MudSpacer />
+        <MudMenu Icon="@Icons.Material.Outlined.Translate" Color="Color.Inherit" Direction="Direction.Bottom" OffsetY="true" Dense="true">
+            <MudMenuItem>English</MudMenuItem>
+            <MudMenuItem>Swedish</MudMenuItem>
+            <MudMenuItem>Old Norse</MudMenuItem>
+        </MudMenu>
+        <MudMenu Icon="@Icons.Material.Outlined.Widgets" Color="Color.Inherit" Direction="Direction.Bottom" OffsetY="true" Dense="true">
+            <MudMenuItem Link="https://mudblazor.com/">MudBlazor</MudMenuItem>
+            <MudMenuItem Link="https://github.com/Garderoben/HomeApps">Source Code</MudMenuItem>
+        </MudMenu>
+        <MudMenu Direction="Direction.Left" OffsetX="true" Dense="true" Class="mt-1 ml-4">
+            <ActivatorContent>
+                <MudAvatar Image="images/avatar_jonny.jpg" />
+            </ActivatorContent>
+            <ChildContent>
+                <PersonCard Class="mt-n2" />
+                <MudDivider Class="mb-2" />
+                <MudListItem Text="Account" Icon="@Icons.Material.Outlined.Person" Href="/personal/account" />
+                <MudListItem Text="Logout" Icon="@Icons.Material.Outlined.Login" Href="/pages/authentication/login" />
+            </ChildContent>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Always">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudToolBar DisableGutters="true">
+                <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" Class="ml-3" />
+                <MudBreadcrumbs Items="_items"></MudBreadcrumbs>
+                <MudSpacer />
+                <MudButton Variant="Variant.Text" Link="https://mudblazor.com/" Style="color:#594AE2;">MudBlazor</MudButton>
+                <MudButton Variant="Variant.Text" Link="https://github.com/Garderoben/HomeApps" Style="color:#424242;" Class="mr-3">Source Code</MudButton>
+            </MudToolBar>
+        </MudHidden>
+        <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-@code{
-    private bool ShowSpinner = true;
+
+@code {
+    private Theme _theme = Theme.Default;
+
+    public bool _drawerOpen = true;
+
+    void SwitchTheme()
+    {
+        
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Personal", href: "#"),
+        new BreadcrumbItem("Dashboard", href: "#"),
+    };
 }

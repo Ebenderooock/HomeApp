@@ -1,0 +1,149 @@
+﻿@page "/Management/Home/Content/Categories"
+@using HomeApp.Models.Domain.Management.Home.Content
+@using MudBlazor
+@using Microsoft.EntityFrameworkCore
+@using HomeApp.Data.Home;
+@inject HomeContentDbContext homeContentDb
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">Categories</MudText>
+<MudGrid>
+    <MudItem xs="12" sm="12" md="6">
+        <MudCard>
+            <MudForm Model="@model" @ref="@form">
+                <MudCardContent>
+
+                    <MudTextField @bind-Value="model.Description"
+                                  For="@(() => model.Description)"
+                                  Immediate="true"
+                                  Label="Category Description" />
+
+                </MudCardContent>
+            </MudForm>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="Submit">Add</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="6">
+        <MudCard Style="height:100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Earning Report</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="px-0">
+                <MudSimpleTable Elevation="0" Hover="true">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Category category in categories)
+                        {
+                            <tr>
+                                <td>
+                                    <MudText Typo="Typo.body1">@category.Id</MudText>
+                                </td>
+                                <td>
+                                    <MudText Typo="Typo.body1">@category.Description</MudText>
+                                </td>
+                                <td>
+                                    <MudButton OnClick="() => Delete(category)" Variant="Variant.Filled" Color="Color.Error" Size="Size.Small">Delete</MudButton>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    MudForm form;
+
+    private Category model = new();
+    private List<Category> categories = new();
+
+    private decimal estimatedValue => homeContentDb.InventoryItems.Where(i => !i.IsDeleted).Sum(i => i.Value);
+    private int totalItems => homeContentDb.InventoryItems.Where(i => !i.IsDeleted).Count();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        GetCategories();
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 10;
+    }
+
+    private void GetCategories()
+    {
+        categories = homeContentDb.Categories.Where(i => !i.IsDeleted).ToList();
+    }
+
+    private Task Delete(Category category)
+    {
+        homeContentDb.Categories.Remove(category);
+        return homeContentDb.SaveChangesAsync().ContinueWith(task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {
+                Snackbar.Add($"Category deleted!", Severity.Success);
+                GetCategories();
+                model = new();
+            }
+            else
+            {
+                Snackbar.Add($"Category could not be deleted!", Severity.Error);
+            }
+
+
+        });
+    }
+
+    private Task Submit()
+    {
+        return homeContentDb.Categories.AddAsync(model).AsTask().ContinueWith(task =>
+        {
+            return homeContentDb.SaveChangesAsync().ContinueWith(saveTask =>
+            {
+                if (saveTask.IsCompletedSuccessfully)
+                {
+                    Snackbar.Add($"Category added!", Severity.Success);
+                    GetCategories();
+                    model = new();
+                }
+                else
+                {
+                    Snackbar.Add($"Category could not be added!", Severity.Error);
+                };
+
+                return saveTask.Result;
+            }).Result;
+
+            // reload data
+        });
+    }
+    EarningReport[] earningReports = new EarningReport[]
+                    {
+        new EarningReport { Name = "Lunees", Title = "Reactor Engineer", Avatar = "https://avatars2.githubusercontent.com/u/71094850?s=460&u=66c16f5bb7d27dc751f6759a82a3a070c8c7fe4b&v=4", Salary = "$0.99", Severity = Color.Success, SeverityTitle = "Low"},
+        new EarningReport { Name = "Mikes-gh", Title = "Developer", Avatar = "https://avatars.githubusercontent.com/u/16208742?s=120&v=4", Salary = "$19.12K", Severity = Color.Secondary, SeverityTitle = "Medium"},
+        new EarningReport { Name = "Garderoben", Title = "CSS Magician", Avatar = "https://avatars2.githubusercontent.com/u/10367109?s=460&amp;u=2abf95f9e01132e8e2915def42895ffe99c5d2c6&amp;v=4", Salary = "$1337", Severity = Color.Primary, SeverityTitle = "High"},
+                    };
+
+    class EarningReport
+    {
+        public string Avatar;
+        public string Name;
+        public string Title;
+        public Color Severity;
+        public string SeverityTitle;
+        public string Salary;
+    }
+}
